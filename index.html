@@ -13,8 +13,12 @@
         let currentQty = parseInt(qtySpan.innerText) + change;
         
         // Step 2
-        if (currentQty < 0) {
+        if(currentQty < 0) {
             currentQty = 0;
+        }
+
+        else if(currentQty>3){
+            currentQty=3;
         }
         
         // Step 3

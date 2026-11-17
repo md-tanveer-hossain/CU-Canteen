@@ -4,8 +4,44 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CU Tech Canteen</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 </head>
-<body>
-    <h1>CU Tech Campus Canteen</h1>
+<body class="bg-red-100 text-black">
+    <div class="max-w-md mx-auto p-4">
+        <h1 class="text-2xl font-bold mb-4 shadow">CU Tech Campus Canteen</h1>
+
+        <!-- 1st Item-->
+        <div class="bg-white rounded-xl shadow p-4 mb-3 flex justify-between items-center">
+            <div>
+                <h2 class="font-bold text-lg text-green-600">Veg Roll</h2>
+                <p class="text-green-600 font-medium">₹30</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <button onclick="updateQty('vegroll-qty',-1)" class="bg-gray-200 px-3 py-1 rounded-lg font-bold">-</button>
+                <span id="vegroll-qty" class="font-bold">0</span>
+                <button onclick="updateQty('vegroll-qty',+1)" class="bg-green-600 text-white px-3 py-1 rounded-lg font-bold">+</button>
+            </div>
+        </div>
+
+        <!-- 2nd Item-->
+        <div class="bg-white rounded-xl shadow p-4 mb-3 flex justify-between items-center">
+            <div>
+                <h2 class="font-bold text-lg text-green-600">Paneer Roll</h2>
+                <p class="text-green-600 font-medium">₹35</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <button class="bg-gray-200 px-3 py-1 rounded-lg font-bold">-</button>
+                <span onclick="updateQty('paneerroll-qty',-1)" id="paneerroll-qty" class="font-bold">0</span>
+                <button onclick="updateQty('paneerroll-qty'+1)" class="bg-green-600 text-white px-3 py-1 rounded-lg font-bold">+</button>
+            </div>
+        </div>
+
+        <!-- For Added to Cart -->
+         <div class="bg-gray-200 rounded-xl shadow p-4 mt-6 flex justify-between items-center font-medium">
+            <p class="text-lg font-medium">Total Amount</p>
+            <p class="font-bold">₹<span id="total-amount" class="font-bold">0</span></p>
+        </div>
+
+    </div>
 </body>
 </html>

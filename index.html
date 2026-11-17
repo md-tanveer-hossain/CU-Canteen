@@ -6,6 +6,28 @@
     <title>CU Tech Canteen</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 </head>
+<script>
+    function updateQty(itemId, change) {
+        // Step 1
+        let qtySpan = document.getElementById(itemId);
+        let currentQty = parseInt(qtySpan.innerText) + change;
+        
+        // Step 2
+        if (currentQty < 0) {
+            currentQty = 0;
+        }
+        
+        // Step 3
+        qtySpan.innerText = currentQty;
+
+        // Step 4
+        let vegQty = parseInt(document.getElementById("vegroll-qty").innerText);
+        let paneerQty = parseInt(document.getElementById("paneerroll-qty").innerText);
+        
+        let total = (vegQty * 30) + (paneerQty * 35);
+        document.getElementById("total-amount").innerText = total;
+    }
+</script>
 <body class="bg-red-100 text-black">
     <div class="max-w-md mx-auto p-4 pb-28">
         <h1 class="text-2xl font-bold mb-4 shadow">CU Tech Campus Canteen</h1>

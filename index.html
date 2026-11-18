@@ -50,6 +50,7 @@
             <a id="upi-app-link" href="#" class="inline-block mt-3 bg-blue-600 text-white font-bold px-4 py-2 rounded-lg text-sm">
                 Open GPay / PhonePe / Paytm
             </a>
+            <input id="txn-input" type="text" maxlength="12" oninput="checkTxn()" placeholder="Paste 12-digit UPI Transaction ID" class="mt-3 w-full border border-gray-300 rounded-lg px-3 py-2 text-center text-sm">
         </div>
 
         <!-- For Added to Cart -->
@@ -97,6 +98,7 @@
         let vegQty = parseInt(document.getElementById("vegroll-qty").innerText);
         let paneerQty = parseInt(document.getElementById("paneerroll-qty").innerText);
         let total = parseInt(document.getElementById("total-amount").innerText);
+        let txnId = document.getElementById("txn-input").value.trim();
 
         // 2. Stop if the cart is empty
         if (total === 0) {
@@ -116,7 +118,7 @@
 
         // 4. Convert spaces/newlines into URL-safe code and open WhatsApp
         let phone = "917980734030"; // Put your 10-digit number after 91 for testing
-        let url = "https://wa.me/" + phone + "?text=" + encodeURIComponent(bill+ "\nOrder ID: " + currentOrderId);
+        let url = "https://wa.me/" + phone + "?text=" + encodeURIComponent(bill+ "\nOrder ID: " + currentOrderId+"\nUPI ID:'''"+txnId+"'''");
         window.open(url, "_blank");
     }
     function showUPI() {
@@ -141,11 +143,21 @@
         document.getElementById("qr-amount").innerText = total;
         document.getElementById("upi-app-link").href = upiLink;
 
-        document.getElementById("order-btn").classList.remove("hidden");
+        document.getElementById("txn-input").value = "";
+        document.getElementById("order-btn").classList.add("hidden");
 
         // 4. Unhide the QR box by removing Tailwind's "hidden" class
         document.getElementById("qr-box").classList.remove("hidden");
     }
+
+    function checkTxn() {
+        let txn = document.getElementById("txn-input").value.trim();
+        if (txn.length === 12) {
+            document.getElementById("order-btn").classList.remove("hidden");
+        } else {
+            document.getElementById("order-btn").classList.add("hidden");
+        }
+        }
 </script>
 </body>
 </html>

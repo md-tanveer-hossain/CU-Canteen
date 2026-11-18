@@ -57,14 +57,18 @@
             <div class="max-w-md mx-auto bg-gray-800 text-white rounded-xl shadow-lg p-4 flex justify-between items-center">
             <p class="text-lg font-medium">Total Amount</p>
             <p class="text-xl font-bold">₹<span id="total-amount">0</span></p>
-            <button onclick="placeOrder()" class="bg-green-600 text-white font-bold px-5 py-2 rounded-lg">Order</button>
+            <button id="order-btn" onclick="placeOrder()" class="hidden bg-green-600 text-white font-bold px-5 py-2 rounded-lg">Order</button>
             <button onclick="showUPI()" class="bg-blue-600 text-white font-bold px-4 py-2 rounded-lg">Pay QR</button>
         </div>
 
     </div>
 
     <script>
+    let currentOrderId = "";
+        
     function updateQty(itemId, change) {
+        document.getElementById("qr-box").classList.add("hidden");
+        document.getElementById("order-btn").classList.add("hidden");
         // Step 1
         let qtySpan = document.getElementById(itemId);
         let currentQty = parseInt(qtySpan.innerText) + change;
@@ -112,7 +116,7 @@
 
         // 4. Convert spaces/newlines into URL-safe code and open WhatsApp
         let phone = "917980734030"; // Put your 10-digit number after 91 for testing
-        let url = "https://wa.me/" + phone + "?text=" + encodeURIComponent(bill);
+        let url = "https://wa.me/" + phone + "?text=" + encodeURIComponent(bill+ "\nOrder ID: " + currentOrderId);
         window.open(url, "_blank");
     }
     function showUPI() {
@@ -124,15 +128,20 @@
             return;
         }
 
+        let randomNum = Math.floor(Math.random() * 9000) + 1000;
+        currentOrderId="CU-"+randomNum;
+
         // 2. Build the official UPI payment link (put your own UPI ID for testing)
         let upiId = "ghoshrupayan0@oksbi"; 
-        let upiLink = "upi://pay?pa=" + upiId + "&pn=CU%20Canteen&am=" + total + "&cu=INR";
+        let upiLink = "upi://pay?pa=" + upiId + "&pn=CU%20Canteen&am=" + total + "&cu=INR"+ "&cu=INR&tn=" + currentOrderId;
 
         // 3. Turn that UPI link into a QR image & update the popup
         let qrApi = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=" + encodeURIComponent(upiLink);
         document.getElementById("qr-image").src = qrApi;
         document.getElementById("qr-amount").innerText = total;
         document.getElementById("upi-app-link").href = upiLink;
+
+        document.getElementById("order-btn").classList.remove("hidden");
 
         // 4. Unhide the QR box by removing Tailwind's "hidden" class
         document.getElementById("qr-box").classList.remove("hidden");

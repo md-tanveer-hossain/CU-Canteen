@@ -24,7 +24,7 @@
             <div class="flex items-center gap-3">
                 <button onclick="updateQty('vegroll-qty',-1)" class="bg-gray-200 px-3 py-1 rounded-lg font-bold">-</button>
                 <span id="vegroll-qty" class="font-bold">0</span>
-                <button onclick="updateQty('vegroll-qty',+1)" class="bg-green-600 text-white px-3 py-1 rounded-lg font-bold">+</button>
+                <button id="veg-roll-plus" onclick="updateQty('vegroll-qty',+1)" class="bg-green-600 text-white px-3 py-1 rounded-lg font-bold">+</button>
             </div>
         </div>
 
@@ -40,7 +40,7 @@
             <div class="flex items-center gap-3">
                 <button onclick="updateQty('paneerroll-qty',-1)" class="bg-gray-200 px-3 py-1 rounded-lg font-bold">-</button>
                 <span id="paneerroll-qty" class="font-bold">0</span>
-                <button onclick="updateQty('paneerroll-qty',+1)" class="bg-green-600 text-white px-3 py-1 rounded-lg font-bold">+</button>
+                <button id="paneer-roll-plus" onclick="updateQty('paneerroll-qty',+1)" class="bg-green-600 text-white px-3 py-1 rounded-lg font-bold">+</button>
             </div>
         </div>
 
@@ -159,6 +159,44 @@
             document.getElementById("order-btn").classList.add("hidden");
         }
         }
+</script>
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-app.js";
+    import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyDvqln00xmDVMrFqptfZzTv1N_fF63bRLM",
+        authDomain: "cu-canteen-5e3bd.firebaseapp.com",
+        projectId: "cu-canteen-5e3bd",
+        storageBucket: "cu-canteen-5e3bd.firebasestorage.app",
+        messagingSenderId: "916542590125",
+        appId: "1:916542590125:web:c8998392afc6f8d25b8a24"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    function watchStock(docId, plusBtnId, qtySpanId) {
+        onSnapshot(doc(db, "menu", docId), (docSnap) => {
+            if (!docSnap.exists()) return;
+            const inStock = docSnap.data().inStock;
+            const btn = document.getElementById(plusBtnId);
+
+            btn.disabled = !inStock;
+            btn.textContent = inStock ? "+" : "Sold Out";
+            btn.classList.toggle("bg-green-600", inStock);
+            btn.classList.toggle("bg-gray-400", !inStock);
+            btn.classList.toggle("cursor-not-allowed", !inStock);
+
+            // If item goes out of stock while in cart, reset its qty to 0
+            if (!inStock && parseInt(document.getElementById(qtySpanId).innerText) > 0) {
+                updateQty(qtySpanId, -3);
+            }
+        });
+    }
+
+    watchStock("veg-roll", "veg-roll-plus", "vegroll-qty");
+    watchStock("paneer-roll", "paneer-roll-plus", "paneerroll-qty");
 </script>
 </body>
 </html>

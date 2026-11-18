@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canteen Admin</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body class="bg-amber-50 p-6 text-black">
+    <div class="max-w-md mx-auto">
+        <h1 class="text-2xl font-bold mb-6 bg-yellow-400 rounded-lg p-4 shadow-sm">
+            Canteen Admin: Stock Manager
+        </h1>
+        
+        <p id="status" class="text-sm text-gray-600">Checking login...</p>
+        
+        <button id="login-btn" onclick="adminLogin()" class="mt-3 bg-blue-600 text-white px-4 py-2 rounded-lg font-bold">
+            Sign in with Google
+        </button>
+
+        <div id="admin-panel" class="hidden">
+            <!-- Veg Roll -->
+            <div class="bg-white rounded-xl shadow p-4 mt-4 flex items-center justify-between">
+                <span class="font-bold text-lg">Veg Roll</span>
+                <div class="flex gap-2">
+                    <button onclick="setStock('veg-roll', true)" class="bg-green-600 text-white px-3 py-1.5 rounded-lg font-medium">In Stock</button>
+                    <button onclick="setStock('veg-roll', false)" class="bg-red-600 text-white px-3 py-1.5 rounded-lg font-medium">Out of Stock</button>
+                </div>
+            </div>
+
+            <!-- Paneer Roll -->
+            <div class="bg-white rounded-xl shadow p-4 mt-4 flex items-center justify-between">
+                <span class="font-bold text-lg">Paneer Roll</span>
+                <div class="flex gap-2">
+                    <button onclick="setStock('paneer-roll', true)" class="bg-green-600 text-white px-3 py-1.5 rounded-lg font-medium">In Stock</button>
+                    <button onclick="setStock('paneer-roll', false)" class="bg-red-600 text-white px-3 py-1.5 rounded-lg font-medium">Out of Stock</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-app.js";
+        import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-firestore.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDvqlnO0xmDVMrFqptfZzTv1N_fF63bRLM",
+            authDomain: "cu-canteen-5e3bd.firebaseapp.com",
+            projectId: "cu-canteen-5e3bd",
+            storageBucket: "cu-canteen-5e3bd.firebasestorage.app",
+            messagingSenderId: "916542590125",
+            appId: "1:916542590125:web:c8998392afc6f8d25b8a24"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
+
+        // 1. Google Login
+        async function adminLogin() {
+            try {
+                await signInWithPopup(auth, provider);
+            } catch (error) {
+                document.getElementById("status").textContent = "Error: " + error.code;
+            }
+        }
+        window.adminLogin = adminLogin;
+
+        // 2. Watch Login State to hide/show buttons
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                document.getElementById("status").textContent = "Logged in as: " + user.email;
+                document.getElementById("login-btn").classList.add("hidden");
+                document.getElementById("admin-panel").classList.remove("hidden");
+            } else {
+                document.getElementById("status").textContent = "Please sign in to manage stock.";
+                document.getElementById("login-btn").classList.remove("hidden");
+                document.getElementById("admin-panel").classList.add("hidden");
+            }
+        });
+
+        // 3. Database Write
+        async function setStock(itemId, status) {
+            const docRef = doc(db, "menu", itemId);
+            await setDoc(docRef, { inStock: status }, { merge: true });
+            document.getElementById("status").textContent = `Saved: ${itemId} is ${status ? "In Stock" : "Out of Stock"}`;
+        }
+        window.setStock = setStock;
+    </script>
+</body>
+</html>

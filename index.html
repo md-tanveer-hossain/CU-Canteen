@@ -3,46 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CU Tech Canteen</title>
+    <title>Campus Canteen</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 </head>
 
 <body class="bg-amber-50 text-black min-h-screen"
       style="background-image: radial-gradient(rgba(217, 119, 6, 0.18) 1px, transparent 1px); background-size: 20px 20px;">
     <div class="max-w-md mx-auto p-4 pb-28">
-        <h1 class="text-2xl font-bold mb-4 bg-yellow-500 rounded-lg p-4 shadow-sm">CU Tech Campus Canteen</h1>
+        <h1 id="shop-header" class="text-2xl font-bold mb-4 bg-yellow-500 rounded-lg p-4 shadow-sm">Loading Menu...</h1>
 
-        <!-- 1st Item-->
-        <div class="bg-white rounded-xl shadow p-4 mb-3 flex justify-between items-center">
-            <div class="flex items-center gap-3">
-                <img src="images/veg-roll.jpg" alt="Veg Roll" class="w-14 h-14 rounded-lg object-cover">
-                <div>
-                    <h2 class="font-bold text-lg text-green-600">Veg Roll</h2>
-                    <p class="text-green-600 font-medium">₹30</p>
-                </div>
-            </div>
-            <div class="flex items-center gap-3">
-                <button onclick="updateQty('vegroll-qty',-1)" class="bg-gray-200 px-3 py-1 rounded-lg font-bold">-</button>
-                <span id="vegroll-qty" class="font-bold">0</span>
-                <button id="veg-roll-plus" onclick="updateQty('vegroll-qty',+1)" class="bg-green-600 text-white px-3 py-1 rounded-lg font-bold">+</button>
-            </div>
-        </div>
-
-        <!-- 2nd Item-->
-        <div class="bg-white rounded-xl shadow p-4 mb-3 flex justify-between items-center">
-            <div class="flex items-center gap-3">
-                <img src="images/paneer-roll.jpg" alt="Paneer Roll" class="w-14 h-14 rounded-lg object-cover">
-                <div>
-                    <h2 class="font-bold text-lg text-green-600">Paneer Roll</h2>
-                    <p class="text-green-600 font-medium">₹35</p>
-                </div>
-            </div>
-            <div class="flex items-center gap-3">
-                <button onclick="updateQty('paneerroll-qty',-1)" class="bg-gray-200 px-3 py-1 rounded-lg font-bold">-</button>
-                <span id="paneerroll-qty" class="font-bold">0</span>
-                <button id="paneer-roll-plus" onclick="updateQty('paneerroll-qty',+1)" class="bg-green-600 text-white px-3 py-1 rounded-lg font-bold">+</button>
-            </div>
-        </div>
+        <!-- Dynamic Menu Items Render Here -->
+        <div id="menu-container"></div>
 
         <!-- Hidden QR Box (Appears when Pay is clicked) -->
         <div id="qr-box" class="hidden bg-white p-4 rounded-xl shadow-md text-center mb-24 border border-gray-300">
@@ -54,149 +25,186 @@
             <input id="txn-input" type="text" maxlength="12" oninput="checkTxn()" placeholder="Paste 12-digit UPI Transaction ID" class="mt-3 w-full border border-gray-300 rounded-lg px-3 py-2 text-center text-sm">
         </div>
 
-        <!-- For Added to Cart -->
-         <div class="fixed bottom-0 left-0 right-0 p-4 bg-red-100/90 backdrop-blur-sm">
+        <!-- Bottom Cart Bar -->
+        <div class="fixed bottom-0 left-0 right-0 p-4 bg-red-100/90 backdrop-blur-sm">
             <div class="max-w-md mx-auto bg-gray-800 text-white rounded-xl shadow-lg p-4 flex justify-between items-center">
-            <p class="text-lg font-medium">Total Amount</p>
-            <p class="text-xl font-bold">₹<span id="total-amount">0</span></p>
-            <button id="order-btn" onclick="placeOrder()" class="hidden bg-green-600 text-white font-bold px-5 py-2 rounded-lg">Order</button>
-            <button onclick="showUPI()" class="bg-blue-600 text-white font-bold px-4 py-2 rounded-lg">Pay QR</button>
+                <p class="text-lg font-medium">Total Amount</p>
+                <p class="text-xl font-bold">₹<span id="total-amount">0</span></p>
+                <button id="order-btn" onclick="placeOrder()" class="hidden bg-green-600 text-white font-bold px-5 py-2 rounded-lg">Order</button>
+                <button onclick="showUPI()" class="bg-blue-600 text-white font-bold px-4 py-2 rounded-lg">Pay QR</button>
+            </div>
         </div>
-
     </div>
 
-    <script>
-    let currentOrderId = "";
-        
-    function updateQty(itemId, change) {
-        document.getElementById("qr-box").classList.add("hidden");
-        document.getElementById("order-btn").classList.add("hidden");
-        // Step 1
-        let qtySpan = document.getElementById(itemId);
-        let currentQty = parseInt(qtySpan.innerText) + change;
-        
-        // Step 2
-        if(currentQty < 0) {
-            currentQty = 0;
-        }
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-app.js";
+        import { initializeFirestore, doc, getDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-firestore.js";
 
-        else if(currentQty>3){
-            currentQty=3;
-        }
-        
-        // Step 3
-        qtySpan.innerText = currentQty;
+        const firebaseConfig = {
+            apiKey: "AIzaSyDvqlnO0xmDVMrFqptfZzTv1N_fF63bRLM",
+            authDomain: "cu-canteen-5e3bd.firebaseapp.com",
+            projectId: "cu-canteen-5e3bd",
+            storageBucket: "cu-canteen-5e3bd.firebasestorage.app",
+            messagingSenderId: "916542590125",
+            appId: "1:916542590125:web:c8998392afc6f8d25b8a24"
+        };
 
-        // Step 4
-        let vegQty = parseInt(document.getElementById("vegroll-qty").innerText);
-        let paneerQty = parseInt(document.getElementById("paneerroll-qty").innerText);
-        
-        let total = (vegQty * 30) + (paneerQty * 35);
-        document.getElementById("total-amount").innerText = total;
-    }
-    function placeOrder() {
-        // 1. Grab the final quantities and total from the screen
-        let vegQty = parseInt(document.getElementById("vegroll-qty").innerText);
-        let paneerQty = parseInt(document.getElementById("paneerroll-qty").innerText);
-        let total = parseInt(document.getElementById("total-amount").innerText);
-        let txnId = document.getElementById("txn-input").value.trim();
+        const app = initializeApp(firebaseConfig);
+        const db = initializeFirestore(app, { experimentalForceLongPolling: true });
 
-        // 2. Stop if the cart is empty
-        if (total === 0) {
-            alert("Please add at least one item first!");
-            return;
-        }
+        const params = new URLSearchParams(window.location.search);
+        const shopId = params.get("shop") || "cu-canteen";
 
-        // 3. Build the receipt text (just like String concatenation in Java/Python)
-        let bill = "CU-Canteen Order:\n";
-        if (vegQty > 0) {
-            bill += "- Veg Roll x" + vegQty + " = ₹" + (vegQty * 30) + "\n";
-        }
-        if (paneerQty > 0) {
-            bill += "- Paneer Roll x" + paneerQty + " = ₹" + (paneerQty * 35) + "\n";
-        }
-        bill += "Total: ₹" + total;
+        let shopConfig = { name: "CU Canteen", upiId: "ghoshrupayan0@oksbi", whatsapp: "917980734030" };
+        let menuItems = {};
+        let currentOrderId = "";
 
-        // 4. Convert spaces/newlines into URL-safe code and open WhatsApp
-        let phone = "917980734030"; // Put your 10-digit number after 91 for testing
-        let url = "https://wa.me/" + phone + "?text=" + encodeURIComponent(bill+ "\nOrder ID: " + currentOrderId+"\nUPI ID:'''"+txnId+"'''");
-        window.open(url, "_blank");
-    }
-    function showUPI() {
-        // 1. Grab the current total
-        let total = parseInt(document.getElementById("total-amount").innerText);
-
-        if (total === 0) {
-            alert("Add items to your cart first!");
-            return;
-        }
-
-        let randomNum = Math.floor(Math.random() * 9000) + 1000;
-        currentOrderId="CU-"+randomNum;
-
-        // 2. Build the official UPI payment link (put your own UPI ID for testing)
-        let upiId = "ghoshrupayan0@oksbi"; 
-        let upiLink = "upi://pay?pa=" + upiId + "&pn=CU%20Canteen&am=" + total + "&cu=INR"+ "&cu=INR&tn=" + currentOrderId;
-
-        // 3. Turn that UPI link into a QR image & update the popup
-        let qrApi = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=" + encodeURIComponent(upiLink);
-        document.getElementById("qr-image").src = qrApi;
-        document.getElementById("qr-amount").innerText = total;
-        document.getElementById("upi-app-link").href = upiLink;
-
-        document.getElementById("txn-input").value = "";
-        document.getElementById("order-btn").classList.add("hidden");
-
-        // 4. Unhide the QR box by removing Tailwind's "hidden" class
-        document.getElementById("qr-box").classList.remove("hidden");
-    }
-
-    function checkTxn() {
-        let txn = document.getElementById("txn-input").value.trim();
-        if (txn.length === 12) {
-            document.getElementById("order-btn").classList.remove("hidden");
-        } else {
-            document.getElementById("order-btn").classList.add("hidden");
-        }
-        }
-</script>
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-app.js";
-    import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-firestore.js";
-
-    const firebaseConfig = {
-        apiKey: "AIzaSyDvqln00xmDVMrFqptfZzTv1N_fF63bRLM",
-        authDomain: "cu-canteen-5e3bd.firebaseapp.com",
-        projectId: "cu-canteen-5e3bd",
-        storageBucket: "cu-canteen-5e3bd.firebasestorage.app",
-        messagingSenderId: "916542590125",
-        appId: "1:916542590125:web:c8998392afc6f8d25b8a24"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-
-    function watchStock(docId, plusBtnId, qtySpanId) {
-        onSnapshot(doc(db, "menu", docId), (docSnap) => {
-            if (!docSnap.exists()) return;
-            const inStock = docSnap.data().inStock;
-            const btn = document.getElementById(plusBtnId);
-
-            btn.disabled = !inStock;
-            btn.textContent = inStock ? "+" : "Sold Out";
-            btn.classList.toggle("bg-green-600", inStock);
-            btn.classList.toggle("bg-gray-400", !inStock);
-            btn.classList.toggle("cursor-not-allowed", !inStock);
-
-            // If item goes out of stock while in cart, reset its qty to 0
-            if (!inStock && parseInt(document.getElementById(qtySpanId).innerText) > 0) {
-                updateQty(qtySpanId, -3);
+        async function loadShopInfo() {
+            try {
+                const shopSnap = await getDoc(doc(db, "shops", shopId));
+                if (shopSnap.exists()) {
+                    shopConfig = { ...shopConfig, ...shopSnap.data() };
+                }
+                document.title = shopConfig.name;
+                document.getElementById("shop-header").textContent = shopConfig.name;
+            } catch (err) {
+                document.getElementById("shop-header").textContent = "Shop Error: " + err.code;
             }
-        });
-    }
+        }
+        loadShopInfo();
 
-    watchStock("veg-roll", "veg-roll-plus", "vegroll-qty");
-    watchStock("paneer-roll", "paneer-roll-plus", "paneerroll-qty");
-</script>
+        onSnapshot(
+            collection(db, "shops", shopId, "menu"),
+            (snapshot) => {
+                const container = document.getElementById("menu-container");
+                container.innerHTML = "";
+                const activeIds = new Set();
+
+                snapshot.forEach((docSnap) => {
+                    const id = docSnap.id;
+                    const data = docSnap.data();
+                    activeIds.add(id);
+
+                    const prevQty = menuItems[id] ? menuItems[id].qty : 0;
+                    const safeQty = data.inStock ? prevQty : 0;
+
+                    // NEW: Prefer pasted imageUrl, fallback to local images/{id}.jpg
+                    const imgTag = data.imageUrl ? `<img src="${data.imageUrl}" onerror="this.style.display='none'" class="w-10 h-10 rounded-lg object-cover">` : "";
+
+                    menuItems[id] = {
+                        name: data.name,
+                        price: data.price,
+                        inStock: data.inStock,
+                        qty: safeQty
+                    };
+
+                    container.innerHTML += `
+                        <div class="bg-white rounded-xl shadow p-4 mb-3 flex justify-between items-center">
+                            <div class="flex items-center gap-3">
+                                ${imgTag}
+                                <div>
+                                    <h2 class="font-bold text-lg text-green-600">${data.name}</h2>
+                                    <p class="text-green-600 font-medium">₹${data.price}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <button onclick="updateQty('${id}', -1)" class="bg-gray-200 px-3 py-1 rounded-lg font-bold">-</button>
+                                <span id="${id}-qty" class="font-bold">${safeQty}</span>
+                                <button onclick="updateQty('${id}', 1)" ${!data.inStock ? "disabled" : ""}
+                                    class="${data.inStock ? "bg-green-600" : "bg-gray-400 cursor-not-allowed"} text-white px-3 py-1 rounded-lg font-bold">
+                                    ${data.inStock ? "+" : "Sold Out"}
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                Object.keys(menuItems).forEach((id) => {
+                    if (!activeIds.has(id)) delete menuItems[id];
+                });
+                recalculateTotal();
+            },
+            (err) => {
+                document.getElementById("shop-header").textContent = "Menu Error: " + err.code;
+            }
+        );
+
+        function recalculateTotal() {
+            let total = 0;
+            Object.values(menuItems).forEach((item) => {
+                total += item.qty * item.price;
+            });
+            document.getElementById("total-amount").innerText = total;
+            return total;
+        }
+
+        window.updateQty = (itemId, change) => {
+            if (!menuItems[itemId] || !menuItems[itemId].inStock) return;
+
+            document.getElementById("qr-box").classList.add("hidden");
+            document.getElementById("order-btn").classList.add("hidden");
+
+            let newQty = menuItems[itemId].qty + change;
+            if (newQty < 0) newQty = 0;
+            if (newQty > 10) newQty = 10;
+
+            menuItems[itemId].qty = newQty;
+            document.getElementById(`${itemId}-qty`).innerText = newQty;
+            recalculateTotal();
+        };
+
+        window.showUPI = () => {
+            const total = recalculateTotal();
+            if (total === 0) {
+                alert("Add items to your cart first!");
+                return;
+            }
+
+            const randomNum = Math.floor(Math.random() * 9000) + 1000;
+            currentOrderId = `${shopId.toUpperCase()}-${randomNum}`;
+
+            const upiLink = `upi://pay?pa=${shopConfig.upiId}&pn=${encodeURIComponent(shopConfig.name)}&am=${total}&cu=INR&tn=${currentOrderId}`;
+            const qrApi = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiLink)}`;
+
+            document.getElementById("qr-image").src = qrApi;
+            document.getElementById("qr-amount").innerText = total;
+            document.getElementById("upi-app-link").href = upiLink;
+
+            document.getElementById("txn-input").value = "";
+            document.getElementById("order-btn").classList.add("hidden");
+            document.getElementById("qr-box").classList.remove("hidden");
+        };
+
+        window.checkTxn = () => {
+            const input = document.getElementById("txn-input");
+            input.value = input.value.replace(/\D/g, "");
+            if (input.value.trim().length === 12) {
+                document.getElementById("order-btn").classList.remove("hidden");
+            } else {
+                document.getElementById("order-btn").classList.add("hidden");
+            }
+        };
+
+        window.placeOrder = () => {
+            const total = recalculateTotal();
+            const txnId = document.getElementById("txn-input").value.trim();
+
+            if (total === 0) {
+                alert("Please add at least one item first!");
+                return;
+            }
+
+            let bill = `${shopConfig.name} Order:\n`;
+            Object.values(menuItems).forEach((item) => {
+                if (item.qty > 0) {
+                    bill += `- ${item.name} x${item.qty} = ₹${item.qty * item.price}\n`;
+                }
+            });
+            bill += `Total: ₹${total}`;
+
+            const url = `https://wa.me/${shopConfig.whatsapp}?text=${encodeURIComponent(bill + "\nOrder ID: " + currentOrderId + "\nUPI Ref: " + txnId)}`;
+            window.open(url, "_blank");
+        };
+    </script>
 </body>
 </html>
